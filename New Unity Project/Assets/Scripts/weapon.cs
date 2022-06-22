@@ -1,68 +1,92 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class weapon : MonoBehaviour
 {
+    [Header("SETTINGS")]
     public bool canFire;
     public float fireCooldown;
     float fireRate;
     public float fireRange;
-    public Camera cam;
+    
+   
+
+
+    [Header("SOUNDS")]
     public AudioSource fireSound;
     public AudioSource magazineSound;
+    public AudioSource noAmmoSound;
+
+    [Header("EFFECTS")]
     public ParticleSystem fireEffect;
     public ParticleSystem bulletTrail;
     public ParticleSystem bloodEffect;
     
+    [Header("OTHERS")]
     Animator myAnim;
+    public Camera cam;
+
+    [Header("WEAPON SETTINGS")]
+    public int totalAmmo;
+    public int magazineCapacity;
+    public int remainingAmmo;
+    public Text totalAmmo_Text;
+    public Text remainingAmmo_Text;
+    int howManyBullets;
+
+
+
+
+
+
+
+
+
     // Start is called before the first frame update
     void Start()
     {
+        remainingAmmo = magazineCapacity;
         myAnim = GetComponent<Animator>();
+        UpdateBulletUI();
 
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(Input.GetKey(KeyCode.Mouse0) && canFire && Time.time > fireRate)
+        if(Input.GetKey(KeyCode.Mouse0))
         {
-            Fire();
-            fireRate = Time.time + fireCooldown;
+            if(canFire && Time.time > fireRate && remainingAmmo!=0)
+            {
+                Fire();
+                fireRate = Time.time + fireCooldown;
+                remainingAmmo --;
+                remainingAmmo_Text.text = remainingAmmo.ToString();
+            }
+            if(remainingAmmo==0)
+            {
+                noAmmoSound.Play();
+            }
 
         }
+       
 
         if(Input.GetKey(KeyCode.R))
-        {
-            /*if(!magazineSound.isPlaying)
+        {  
+            if(remainingAmmo != magazineCapacity)
             {
+                ReloadBullets();
                 
-                magazineSound.Play();
+                UpdateBulletUI();
 
-            } */
-            myAnim.Play("ak47magazin");
+                myAnim.Play("ak47magazin");
+            }
             
-           
         }
 
     }
-
-    void PlayMagazineSound()
-    {
-        magazineSound.Play();
-    }
-    
-
-
-
-
-
-
-
-
-
-
 
     void Fire()
     {
@@ -97,6 +121,22 @@ public class weapon : MonoBehaviour
        
         
 
+    }
+    void PlayMagazineSound()
+    {
+        magazineSound.Play();
+    }
+
+    public void UpdateBulletUI()
+    {
+        remainingAmmo_Text.text = remainingAmmo.ToString();
+        totalAmmo_Text.text = totalAmmo.ToString();
+    }
+    public void ReloadBullets()
+    {
+        howManyBullets = magazineCapacity - remainingAmmo;
+        remainingAmmo += howManyBullets;
+        totalAmmo-=howManyBullets;
     }
 
 
