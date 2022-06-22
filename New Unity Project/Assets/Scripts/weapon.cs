@@ -10,8 +10,8 @@ public class weapon : MonoBehaviour
     public float fireCooldown;
     float fireRate;
     public float fireRange;
-    
-   
+
+
 
 
     [Header("SOUNDS")]
@@ -23,7 +23,7 @@ public class weapon : MonoBehaviour
     public ParticleSystem fireEffect;
     public ParticleSystem bulletTrail;
     public ParticleSystem bloodEffect;
-    
+
     [Header("OTHERS")]
     Animator myAnim;
     public Camera cam;
@@ -50,45 +50,48 @@ public class weapon : MonoBehaviour
         remainingAmmo = magazineCapacity;
         myAnim = GetComponent<Animator>();
         UpdateBulletUI();
-
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(Input.GetKey(KeyCode.Mouse0))
+        if (Input.GetKey(KeyCode.Mouse0))
         {
-            if(canFire && Time.time > fireRate && remainingAmmo!=0)
+            if (canFire && Time.time > fireRate && remainingAmmo != 0)
             {
                 Fire();
                 fireRate = Time.time + fireCooldown;
-                remainingAmmo --;
+                remainingAmmo--;
                 remainingAmmo_Text.text = remainingAmmo.ToString();
             }
-            if(remainingAmmo==0)
+            if (remainingAmmo == 0)
             {
                 noAmmoSound.Play();
             }
 
         }
-       
 
-        if(Input.GetKey(KeyCode.R))
-        {  
-            if(remainingAmmo != magazineCapacity)
+
+        if (Input.GetKey(KeyCode.R) )
+        {
+            if (remainingAmmo < magazineCapacity && totalAmmo !=0)
             {
-                ReloadBullets();
-                
-                UpdateBulletUI();
-
-                myAnim.Play("ak47magazin");
+                if(remainingAmmo!=0)
+                {
+                    ReloadBulletsMath("NotEmpty");
+                    
+                }
+                else
+                {
+                    ReloadBulletsMath("Empty");
+                }
             }
-            
         }
 
     }
 
     void Fire()
+    
     {
         fireSound.Play();
         fireEffect.Play();
@@ -96,30 +99,23 @@ public class weapon : MonoBehaviour
 
         RaycastHit hit;
 
-        if(Physics.Raycast(cam.transform.position,cam.transform.forward,out hit,fireRange))
+        if (Physics.Raycast(cam.transform.position, cam.transform.forward, out hit, fireRange))
         {
-            if(hit.transform.gameObject.CompareTag("Dusman"))
+            if (hit.transform.gameObject.CompareTag("Dusman"))
             {
                 Instantiate(bloodEffect, hit.point, Quaternion.LookRotation(hit.normal));
             }
-            else if(hit.transform.gameObject.CompareTag("Moveable"))
+            else if (hit.transform.gameObject.CompareTag("Moveable"))
             {
                 Rigidbody rb = hit.transform.gameObject.GetComponent<Rigidbody>();
-                rb.AddForce(-hit.normal , ForceMode.Impulse);
-
-
+                rb.AddForce(-hit.normal, ForceMode.Impulse);
             }
-            
+
             else
             {
                 Instantiate(bulletTrail, hit.point, Quaternion.LookRotation(hit.normal));
             }
-           
-            
         }
-
-       
-        
 
     }
     void PlayMagazineSound()
@@ -132,11 +128,64 @@ public class weapon : MonoBehaviour
         remainingAmmo_Text.text = remainingAmmo.ToString();
         totalAmmo_Text.text = totalAmmo.ToString();
     }
-    public void ReloadBullets()
+    public void ReloadBulletsMath(string type)
     {
-        howManyBullets = magazineCapacity - remainingAmmo;
-        remainingAmmo += howManyBullets;
-        totalAmmo-=howManyBullets;
+        switch(type)
+        {
+            case "NotEmpty":
+                if(magazineCapacity >= totalAmmo)
+                {
+                    int total =remainingAmmo + totalAmmo;
+                    if(total > magazineCapacity)
+                    {
+                        remainingAmmo = magazineCapacity;
+                        totalAmmo =total - magazineCapacity;
+                    }
+                    else
+                    {
+                        remainingAmmo += totalAmmo;
+                        totalAmmo=0;
+                    }
+                    
+                    
+                }
+                else
+                {
+                    howManyBullets = magazineCapacity - remainingAmmo;
+                    totalAmmo -= howManyBullets;
+                    remainingAmmo = magazineCapacity;
+                    myAnim.Play("ak47magazin");
+                    
+
+                }
+                UpdateBulletUI();
+                
+                
+
+            break;
+
+
+            case "Empty":
+                if(magazineCapacity >= totalAmmo)
+                {
+                    remainingAmmo=totalAmmo;
+                    totalAmmo=0;
+                    
+                }
+                else
+                {
+                    totalAmmo -= magazineCapacity;
+                    remainingAmmo = magazineCapacity;
+                    
+
+                }
+                UpdateBulletUI();
+                
+                
+
+            break;
+        }
+
     }
 
 
